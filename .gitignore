@@ -87,3 +87,4 @@ cython_debug/
 /cdk.out/
 .cdk.staging/
 !/.projenrc.py
+.idea
