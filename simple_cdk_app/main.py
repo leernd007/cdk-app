@@ -72,3 +72,52 @@ class MyStack(Stack):
     cluster.add_asg_capacity_provider(
       ecs.AsgCapacityProvider(self, "AsgCapacityProvider", auto_scaling_group=asg)
     )
+    task_role = iam.Role.from_role_name(self, "ecsTaskExecutionRole", role_name="ecsTaskExecutionRole")
+
+    fast_api_task_definition = ecs.Ec2TaskDefinition(self,
+        "FastApiTaskDefinition",
+        execution_role=task_role,
+        task_role=task_role,
+        network_mode=ecs.NetworkMode.BRIDGE,
+    )
+    fast_api_container = fast_api_task_definition.add_container(
+        "fastapi_app",
+        image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.eu-central-1.amazonaws.com/fastapi_app"),
+        memory_limit_mib=3072,
+        cpu=1024,
+        logging=ecs.LogDrivers.aws_logs(stream_prefix="MyApp")
+    )
+
+    fast_api_container.add_port_mappings( ecs.PortMapping(container_port=80, host_port=80, protocol=ecs.Protocol.TCP))
+
+
+    sftp_task_definition = ecs.Ec2TaskDefinition(self,
+        "SFTPTaskDefinition",
+        execution_role=task_role,
+        task_role=task_role,
+        network_mode=ecs.NetworkMode.BRIDGE,
+    )
+    sftp_container = sftp_task_definition.add_container(
+        "sftpgo",
+        image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.eu-central-1.amazonaws.com/sftpgo"),
+        memory_limit_mib=3072,
+        cpu=1024,
+        logging=ecs.LogDrivers.aws_logs(stream_prefix="MyApp")
+    )
+
+    sftp_container.add_port_mappings(
+        ecs.PortMapping(container_port=2022, host_port=2022, protocol=ecs.Protocol.TCP),
+        ecs.PortMapping(container_port=8080, host_port=8080, protocol=ecs.Protocol.TCP)
+    )
+
+    ecs.Ec2Service(
+        self, "FastApiEc2Service",
+        cluster=cluster,
+        task_definition=fast_api_task_definition,
+    )
+
+    ecs.Ec2Service(
+        self, "SftpEc2Service",
+        cluster=cluster,
+        task_definition=sftp_task_definition,
+    )
