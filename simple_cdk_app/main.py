@@ -38,31 +38,26 @@ class MyStack(Stack):
         key_pair_name="ubuntu"
     )
 
-    # ecs_instance_role = iam.Role(self, "EcsInstanceRole",
-    #                              assumed_by=iam.ServicePrincipal("ec2.amazonaws.com")
-    #                              )
-    #
-    # ecs_instance_role.add_managed_policy(
-    #     iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2ContainerServiceforEC2Role")
-    # )
+    ecs_instance_role = iam.Role(self, "EcsInstanceRole",
+                                 assumed_by=iam.ServicePrincipal("ec2.amazonaws.com")
+                                 )
 
-    user_data_v1 = """MIME-Version: 1.0
-    Content-Type: multipart/mixed; boundary="==MYBOUNDARY=="
+    ecs_instance_role.add_managed_policy(
+        iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2ContainerServiceforEC2Role")
+    )
 
-    --==MYBOUNDARY==
-    Content-Type: text/x-shellscript; charset="us-ascii"
-
-    #!/bin/bash
-    "yum install -y aws-cli",
-    "echo ECS_CLUSTER=ECSCluster >> /etc/ecs/ecs.config",
-    "start ecs"
-    --==MYBOUNDARY==--\
+    user_data_v1 = """
+#!/bin/bash
+"yum install -y aws-cli",
+"echo ECS_CLUSTER=ECSCluster >> /etc/ecs/ecs.config",
+"start ecs"
     """
     launch_template = ec2.CfnLaunchTemplate(self, "LaunchTemplate",
        launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
         instance_type="t2.xlarge",
         user_data=user_data_v1,
         key_name="ubuntu",
+        role=instance_role,
         security_group_ids=[security_group.security_group_id],
         # security_groups=["sg-030f0119fed0f06d5"],
         # iam_instance_profile=instance_profile,
@@ -95,8 +90,8 @@ class MyStack(Stack):
                          desired_capacity=1,
                          associate_public_ip_address=True
                          )
-    capacity_provider = ecs.AsgCapacityProvider(self, "AsgCapacityProvider",auto_scaling_group=asg, machine_image_type=ecs.MachineImageType.AMAZON_LINUX_2)
-    cluster.add_asg_capacity_provider(capacity_provider)
+    # capacity_provider = ecs.AsgCapacityProvider(self, "AsgCapacityProvider",auto_scaling_group=asg, machine_image_type=ecs.MachineImageType.AMAZON_LINUX_2)
+    # cluster.add_asg_capacity_provider(capacity_provider)
     #
     # task_role = iam.Role.from_role_name(self, "ecsTaskExecutionRole", role_name="ecsTaskExecutionRole")
     # #

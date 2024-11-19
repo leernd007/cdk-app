@@ -1,6 +1,7 @@
 import os
 from aws_cdk import App, Environment
 from simple_cdk_app.main import MyStack
+from simple_cdk_app.asg import EcsWithAsgStack
 
 # for development, use account/region from cdk cli
 dev_env = Environment(
@@ -11,7 +12,8 @@ dev_env = Environment(
 )
 
 app = App()
-MyStack(app, "simple-cdk-app-dev", env=dev_env)
+# MyStack(app, "simple-cdk-app-dev", env=dev_env)
+EcsWithAsgStack(app, "simple-cdk-app-dev", env=dev_env)
 # MyStack(app, "simple_cdk_app-prod", env=prod_env)
 
 app.synth()
