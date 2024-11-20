@@ -1,4 +1,13 @@
-from aws_cdk import aws_ec2 as ec2, aws_autoscaling as autoscaling, aws_ecs as ecs, aws_iam as iam
+from aws_cdk import (
+    aws_ec2 as ec2,
+    aws_autoscaling as autoscaling,
+    aws_ecs as ecs,
+    aws_iam as iam,
+    aws_route53 as route53,
+    aws_route53_targets as targets,
+    aws_elasticloadbalancingv2 as elbv2,
+    CfnOutput
+)
 from aws_cdk import App, Stack
 
 class EcsWithAsgStack(Stack):
@@ -118,39 +127,53 @@ class EcsWithAsgStack(Stack):
             task_definition=sftp_task_definition,
         )
 
-        # lb = elbv2.ApplicationLoadBalancer(self, "LB", vpc=vpc, internet_facing=True, load_balancer_name="AndriisLB")
-        #
-        # certificate_arn = "arn:aws:acm:eu-central-1:792479060307:certificate/ec3fd1a9-b3df-4783-baed-2c1af2061a1e"
-        #
-        # listener = lb.add_listener(
-        #     "Listener",
-        #     port=443,
-        #     certificates=[elbv2.ListenerCertificate.from_arn(certificate_arn)]
-        # )
-        # listener.add_targets(
-        #     "FastApiTargetGroup",
-        #     port=80,
-        #     health_check=elbv2.HealthCheck(
-        #         path="/",
-        #         healthy_http_codes="200",
-        #         port="80"
-        #     ),
-        #     target_group_name="FastApiTargetGroup",
-        #     targets=[asg]
-        # )
-        # listener.add_targets(
-        #     "SftpTargetGroup",
-        #     port=8080,
-        #     target_group_name="SftpTargetGroup",
-        #     health_check=elbv2.HealthCheck(
-        #         path="/web/admin/setup",  #
-        #         healthy_http_codes="200",
-        #         port="8080"
-        #     ),
-        #     conditions=[
-        #         elbv2.ListenerCondition.path_patterns(["/sftp/*"])
-        #     ],
-        #     priority=1,
-        #     targets=[asg]
-        # )
-        # CfnOutput(self, "LoadBalancerDNS", value=lb.load_balancer_dns_name)
+        lb = elbv2.ApplicationLoadBalancer(self, "LB", vpc=vpc, internet_facing=True, load_balancer_name="AndriisLB")
+
+        certificate_arn = "arn:aws:acm:eu-central-1:792479060307:certificate/ec3fd1a9-b3df-4783-baed-2c1af2061a1e"
+
+        listener = lb.add_listener(
+            "Listener",
+            port=443,
+            certificates=[elbv2.ListenerCertificate.from_arn(certificate_arn)]
+        )
+        listener.add_targets(
+            "FastApiTargetGroup",
+            port=80,
+            health_check=elbv2.HealthCheck(
+                path="/",
+                healthy_http_codes="200",
+                port="80"
+            ),
+            target_group_name="FastApiTargetGroup",
+            targets=[asg]
+        )
+        listener.add_targets(
+            "SftpTargetGroup",
+            port=8080,
+            target_group_name="SftpTargetGroup",
+            health_check=elbv2.HealthCheck(
+                path="/web/admin/setup",  #
+                healthy_http_codes="200",
+                port="8080"
+            ),
+            conditions=[
+                elbv2.ListenerCondition.path_patterns(["/sftp/*"])
+            ],
+            priority=1,
+            targets=[asg]
+        )
+        CfnOutput(self, "LoadBalancerDNS", value=lb.load_balancer_dns_name)
+
+        hosted_zone = route53.HostedZone.from_lookup(
+            self,
+            "HostedZone",
+            domain_name="andriispsya.site"  # Replace with your domain
+        )
+
+        route53.ARecord(
+            self,
+            "AliasRecord",
+            zone=hosted_zone,
+            target=route53.RecordTarget.from_alias(targets.LoadBalancerTarget(lb)),
+            record_name="",  # The subdomain (e.g., www.example.com)
+        )

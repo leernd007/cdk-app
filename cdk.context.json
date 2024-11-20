@@ -67,5 +67,9 @@
         ]
       }
     ]
+  },
+  "hosted-zone:account=792479060307:domainName=andriispsya.site:region=eu-central-1": {
+    "Id": "/hostedzone/Z02581202VQFAR3EXCH3O",
+    "Name": "andriispsya.site."
   }
 }
