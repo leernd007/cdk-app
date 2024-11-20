@@ -142,7 +142,7 @@ class MyStack(Stack):
     #     cluster=cluster,
     #     task_definition=sftp_task_definition,
     # )
-
+    #
     # lb = elbv2.ApplicationLoadBalancer(self, "LB", vpc=vpc, internet_facing=True, load_balancer_name="AndriisLB")
     #
     # certificate_arn = "arn:aws:acm:eu-central-1:792479060307:certificate/ec3fd1a9-b3df-4783-baed-2c1af2061a1e"
