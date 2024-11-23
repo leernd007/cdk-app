@@ -6,7 +6,8 @@ from aws_cdk import (
     aws_route53 as route53,
     aws_route53_targets as targets,
     aws_elasticloadbalancingv2 as elbv2,
-    CfnOutput
+    CfnOutput,
+    aws_certificatemanager as acm
 )
 from aws_cdk import App, Stack
 
@@ -14,12 +15,12 @@ class EcsWithAsgStack(Stack):
     def __init__(self, scope, id, **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        # Step 1: Create a VPC
-        vpc = ec2.Vpc.from_lookup(self, "defaultVpC",is_default=True, vpc_id="vpc-0d16dafb8b43b505d")
-
-        custom_ami = ec2.MachineImage.generic_linux({
-            "eu-central-1": "ami-06e98c6511a4d6aeb",
-        })
+        vpc = ec2.Vpc(
+            self,
+            "DefaultVpc",
+            max_azs=3,
+            nat_gateways=1,
+        )
 
         instance_role = iam.Role(
             self,
@@ -30,21 +31,67 @@ class EcsWithAsgStack(Stack):
             ],
         )
 
-        # Step 2: Define the User Data for ECS
         user_data = ec2.UserData.for_linux()
-        user_data.add_commands("sudo yum update -y")
-        user_data.add_commands("echo ECS_CLUSTER=my-ecs-cluster >> /etc/ecs/ecs.config")
-        user_data.add_commands("echo ECS_CONTAINER_INSTANCE_PROPAGATE_TAGS_FROM=ec2_instance >> /etc/ecs/ecs.config")
+        # user_data.add_commands("sudo yum update -y")
+        # user_data.add_commands("echo ECS_CLUSTER=my-ecs-cluster >> /etc/ecs/ecs.config")
+        # user_data.add_commands("echo ECS_CONTAINER_INSTANCE_PROPAGATE_TAGS_FROM=ec2_instance >> /etc/ecs/ecs.config")
 
-        sg_name = "sg-030f0119fed0f06d5"
+        def define_sg_grop():
+            security_group = ec2.SecurityGroup(
+                self,
+                "CustomSecurityGroup",
+                vpc=vpc,
+                security_group_name="MyCustomSecurityGroup",
+                allow_all_outbound=True,  # Allow all outbound traffic
+                description="Security group with specific inbound rules",
+            )
 
-        security_group = ec2.SecurityGroup.from_security_group_id(
-            self,
-            "ExistingSG",
-            sg_name
-        )
+            # Add inbound rules
+            security_group.add_ingress_rule(
+                peer=ec2.Peer.any_ipv4(),  # Allow from any IPv4
+                connection=ec2.Port.tcp(22),  # SSH
+                description="Allow SSH traffic on port 22",
+            )
 
-        # Step 3: Define the Launch Template
+            security_group.add_ingress_rule(
+                peer=ec2.Peer.any_ipv4(),
+                connection=ec2.Port.tcp(443),  # HTTPS
+                description="Allow HTTPS traffic on port 443",
+            )
+
+            security_group.add_ingress_rule(
+                peer=ec2.Peer.any_ipv4(),
+                connection=ec2.Port.tcp(8080),  # Custom TCP port 8080
+                description="Allow traffic on port 8080",
+            )
+
+            security_group.add_ingress_rule(
+                peer=ec2.Peer.any_ipv4(),
+                connection=ec2.Port.icmp_ping(),  # ICMP for ping
+                description="Allow all ICMP traffic (e.g., ping)",
+            )
+
+            security_group.add_ingress_rule(
+                peer=ec2.Peer.any_ipv4(),
+                connection=ec2.Port.tcp(2022),  # Custom TCP port 2022
+                description="Allow traffic on port 2022",
+            )
+
+            security_group.add_ingress_rule(
+                peer=ec2.Peer.any_ipv4(),
+                connection=ec2.Port.tcp(80),  # HTTP
+                description="Allow HTTP traffic on port 80",
+            )
+
+            return security_group
+
+        security_group = define_sg_grop()
+
+        #
+        custom_ami = ec2.MachineImage.generic_linux({
+            "us-east-1": "ami-02b21406128600b18",
+        })
+
         launch_template = ec2.LaunchTemplate(
             self,
             "LaunchTemplate",
@@ -70,10 +117,6 @@ class EcsWithAsgStack(Stack):
             max_capacity=3,
         )
 
-        # Step 5: Create the ECS Cluster
-
-
-        # Step 6: Attach the ASG to the ECS Cluster using Capacity Provider
         capacity_provider = ecs.AsgCapacityProvider(self, "AsgCapacityProvider", auto_scaling_group=asg)
         cluster.add_asg_capacity_provider(capacity_provider, can_containers_access_instance_role=True)
 
@@ -87,7 +130,7 @@ class EcsWithAsgStack(Stack):
                                                          )
         fast_api_container = fast_api_task_definition.add_container(
             "fastapi_app",
-            image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.eu-central-1.amazonaws.com/fastapi_app"),
+            image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.us-east-1.amazonaws.com/fastapi_app"),
             memory_limit_mib=3072,
             cpu=1024,
             logging=ecs.LogDrivers.aws_logs(stream_prefix="MyApp")
@@ -104,7 +147,7 @@ class EcsWithAsgStack(Stack):
                                                      )
         sftp_container = sftp_task_definition.add_container(
             "sftpgo",
-            image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.eu-central-1.amazonaws.com/sftpgo"),
+            image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.us-east-1.amazonaws.com/sftpgo"),
             memory_limit_mib=3072,
             cpu=1024,
             logging=ecs.LogDrivers.aws_logs(stream_prefix="MyApp")
@@ -128,13 +171,23 @@ class EcsWithAsgStack(Stack):
         )
 
         lb = elbv2.ApplicationLoadBalancer(self, "LB", vpc=vpc, internet_facing=True, load_balancer_name="AndriisLB")
+        hosted_zone = route53.HostedZone.from_lookup(
+            self,
+            "HostedZone",
+            domain_name="andriispsya.site"
+        )
+        certificate = acm.Certificate(
+            self,
+            "SiteCertificate",
+            domain_name="andriispsya.site",  # Replace with your domain
+            validation=acm.CertificateValidation.from_dns(hosted_zone),  # Use DNS validation
+        )
 
-        certificate_arn = "arn:aws:acm:eu-central-1:792479060307:certificate/ec3fd1a9-b3df-4783-baed-2c1af2061a1e"
 
         listener = lb.add_listener(
             "Listener",
             port=443,
-            certificates=[elbv2.ListenerCertificate.from_arn(certificate_arn)]
+            certificates=[certificate]
         )
         listener.add_targets(
             "FastApiTargetGroup",
@@ -164,16 +217,12 @@ class EcsWithAsgStack(Stack):
         )
         CfnOutput(self, "LoadBalancerDNS", value=lb.load_balancer_dns_name)
 
-        hosted_zone = route53.HostedZone.from_lookup(
-            self,
-            "HostedZone",
-            domain_name="andriispsya.site"  # Replace with your domain
-        )
+
 
         route53.ARecord(
             self,
             "AliasRecord",
             zone=hosted_zone,
             target=route53.RecordTarget.from_alias(targets.LoadBalancerTarget(lb)),
-            record_name="",  # The subdomain (e.g., www.example.com)
+            record_name="",
         )

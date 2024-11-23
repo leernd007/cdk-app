@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Data Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #dataList {
+            list-style-type: none;
+            padding: 0;
+        }
+        .item {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Data</h1>
+    <ul id="dataList"></ul>
+
+    <script>
+        function fetchData() {
+            // Replace with your API endpoint
+            fetch('https://andriispsya.site/api')
+                .then(response => response.json())
+                .then(data => {
+                    const dataList = document.getElementById('dataList');
+                    dataList.innerHTML = ''; // Clear existing items
+                    
+                    // Assuming data is an array. Adjust according to your API response structure
+                    for (var item in data) {
+                        const li = document.createElement('li');
+                        li.className = 'item';
+                        li.textContent = JSON.stringify(data[item], null, 2);
+                        dataList.appendChild(li);
+                    };
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        // Fetch initial data
+        fetchData();
+
+        // Refresh data every minute (60000 milliseconds)
+        setInterval(fetchData, 60000);
+    </script>
+</body>
+</html>

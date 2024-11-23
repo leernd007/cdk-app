@@ -71,5 +71,17 @@
   "hosted-zone:account=792479060307:domainName=andriispsya.site:region=eu-central-1": {
     "Id": "/hostedzone/Z02581202VQFAR3EXCH3O",
     "Name": "andriispsya.site."
-  }
+  },
+  "hosted-zone:account=792479060307:domainName=andriispsya.site:region=us-east-1": {
+    "Id": "/hostedzone/Z02581202VQFAR3EXCH3O",
+    "Name": "andriispsya.site."
+  },
+  "availability-zones:account=792479060307:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ]
 }
