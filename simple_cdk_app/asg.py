@@ -219,23 +219,23 @@ class EcsWithAsgStack(Stack):
             targets=[asg]
         )
         CfnOutput(self, "LoadBalancerDNS", value=lb.load_balancer_dns_name)
-        # sftp_bucket_name = 'andriis-sftp-files'
-        # sftp_bucket = s3.Bucket(
-        #     self,
-        #     "MyBucket",
-        #     bucket_name=sftp_bucket_name,
-        #     versioned=False,
-        #     auto_delete_objects=True,
-        #     removal_policy=RemovalPolicy.DESTROY
-        # )
-        #
-        # # just to deploy test files
-        # s3_deployment.BucketDeployment(
-        #     self,
-        #     "UploadFile",
-        #     sources=[s3_deployment.Source.asset("./web")],  # Local folder or file path
-        #     destination_bucket=sftp_bucket
-        # )
+        sftp_bucket_name = 'andriis-sftp-files'
+        sftp_bucket = s3.Bucket(
+            self,
+            "MyBucket",
+            bucket_name=sftp_bucket_name,
+            versioned=False,
+            auto_delete_objects=True,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        # just to deploy test files
+        s3_deployment.BucketDeployment(
+            self,
+            "UploadFile",
+            sources=[s3_deployment.Source.asset("./web")],  # Local folder or file path
+            destination_bucket=sftp_bucket
+        )
         # {
         #     "Version": "2008-10-17",
         #     "Id": "PolicyForCloudFrontPrivateContent",
@@ -256,27 +256,26 @@ class EcsWithAsgStack(Stack):
         #         }
         #     ]
         # }
-        # sftp_bucket_policy = {
-        #     "Version": "2008-10-17",
-        #     "Id": "PolicyForCloudFrontPrivateContent",
-        #     "Statement": [
-        #         {
-        #             "Sid": "AllowCloudFrontServicePrincipal",
-        #             "Effect": "Allow",
-        #             "Principal": {
-        #                 "Service": "cloudfront.amazonaws.com"
-        #             },
-        #             "Action": "s3:GetObject",
-        #             "Resource": "arn:aws:s3:::" + sftp_bucket_name + "/*"
-        #         }
-        #     ]
-        # }
-        #
-        # s3.CfnBucketPolicy(self, "BucketPolicy",
-        #     bucket=sftp_bucket_name,
-        #     policy_document=sftp_bucket_policy
-        # )
+        sftp_bucket_policy = {
+            "Version": "2008-10-17",
+            "Id": "PolicyForCloudFrontPrivateContent",
+            "Statement": [
+                {
+                    "Sid": "AllowCloudFrontServicePrincipal",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "cloudfront.amazonaws.com"
+                    },
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::" + sftp_bucket_name + "/*"
+                }
+            ]
+        }
 
+        s3.CfnBucketPolicy(self, "BucketPolicy",
+            bucket=sftp_bucket_name,
+            policy_document=sftp_bucket_policy
+        )
 
         bucket_name = "andriis-static-html"
         bucket = s3.Bucket(
