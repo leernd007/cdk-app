@@ -83,5 +83,215 @@
     "us-east-1d",
     "us-east-1e",
     "us-east-1f"
-  ]
+  ],
+  "load-balancer:account=792479060307:loadBalancerArn=arn$:aws$:elasticloadbalancing$:us-east-1$:792479060307$:loadbalancer/app/AndriisLB/4575fe636d1fffb1:loadBalancerType=application:region=us-east-1": {
+    "loadBalancerArn": "arn:aws:elasticloadbalancing:us-east-1:792479060307:loadbalancer/app/AndriisLB/4575fe636d1fffb1",
+    "loadBalancerCanonicalHostedZoneId": "Z35SXDOTRQ7X7K",
+    "loadBalancerDnsName": "AndriisLB-2083468527.us-east-1.elb.amazonaws.com",
+    "vpcId": "vpc-0980f1c21808ed8cb",
+    "securityGroupIds": [
+      "sg-005b7fbb34b36c33a"
+    ],
+    "ipAddressType": "ipv4"
+  },
+  "vpc-provider:account=792479060307:filter.vpc-id=vpc-0980f1c21808ed8cb:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0980f1c21808ed8cb",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "792479060307",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-05d863c3c8eed276b",
+            "cidr": "10.0.96.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-02146b322ce1a5a81"
+          },
+          {
+            "subnetId": "subnet-07e104550da80c740",
+            "cidr": "10.0.128.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-00fb384a3ccb54115"
+          },
+          {
+            "subnetId": "subnet-0b5d14667fad3634b",
+            "cidr": "10.0.160.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0da64ef09d06abfcb"
+          }
+        ]
+      },
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-0d349b95d3f4294c3",
+            "cidr": "10.0.0.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-01ff0bdcf62fb2469"
+          },
+          {
+            "subnetId": "subnet-0f14e030123fa059c",
+            "cidr": "10.0.32.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-09c336415a54ff35a"
+          },
+          {
+            "subnetId": "subnet-04fa939f8a1c2c00e",
+            "cidr": "10.0.64.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0f3b163a817e09603"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=792479060307:region=us-east-1:securityGroupId=sg-005b7fbb34b36c33a": {
+    "securityGroupId": "sg-005b7fbb34b36c33a",
+    "allowAllOutbound": false
+  },
+  "load-balancer:account=792479060307:loadBalancerArn=arn$:aws$:elasticloadbalancing$:us-east-1$:792479060307$:loadbalancer/app/AndriisLB/48ff669236b02502:loadBalancerType=application:region=us-east-1": {
+    "loadBalancerArn": "arn:aws:elasticloadbalancing:us-east-1:792479060307:loadbalancer/app/AndriisLB/48ff669236b02502",
+    "loadBalancerCanonicalHostedZoneId": "Z35SXDOTRQ7X7K",
+    "loadBalancerDnsName": "AndriisLB-1714377328.us-east-1.elb.amazonaws.com",
+    "vpcId": "vpc-093895d477cca06b9",
+    "securityGroupIds": [
+      "sg-013cfbb19de9ace17"
+    ],
+    "ipAddressType": "ipv4"
+  },
+  "vpc-provider:account=792479060307:filter.vpc-id=vpc-093895d477cca06b9:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-093895d477cca06b9",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "792479060307",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-0c626aa096e4df093",
+            "cidr": "10.0.0.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-005bb6c5404e66840"
+          },
+          {
+            "subnetId": "subnet-03264868361a146db",
+            "cidr": "10.0.32.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-01522798f3a781c28"
+          },
+          {
+            "subnetId": "subnet-0279b807e9b98ea37",
+            "cidr": "10.0.64.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-08ad28515647546fd"
+          }
+        ]
+      },
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-042f810b5a3a09720",
+            "cidr": "10.0.96.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-067f349fddfc18c1b"
+          },
+          {
+            "subnetId": "subnet-03af1dd29b1ff315f",
+            "cidr": "10.0.128.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-09940c3cd154739a0"
+          },
+          {
+            "subnetId": "subnet-09754861ce9f65480",
+            "cidr": "10.0.160.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-03485bc80f3457675"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=792479060307:region=us-east-1:securityGroupId=sg-013cfbb19de9ace17": {
+    "securityGroupId": "sg-013cfbb19de9ace17",
+    "allowAllOutbound": false
+  },
+  "load-balancer:account=792479060307:loadBalancerArn=arn$:aws$:elasticloadbalancing$:us-east-1$:792479060307$:loadbalancer/app/AndriisLB/0c276f9134949c30:loadBalancerType=application:region=us-east-1": {
+    "loadBalancerArn": "arn:aws:elasticloadbalancing:us-east-1:792479060307:loadbalancer/app/AndriisLB/0c276f9134949c30",
+    "loadBalancerCanonicalHostedZoneId": "Z35SXDOTRQ7X7K",
+    "loadBalancerDnsName": "AndriisLB-713946790.us-east-1.elb.amazonaws.com",
+    "vpcId": "vpc-0ac1b723b80c94812",
+    "securityGroupIds": [
+      "sg-003c4785267a48015"
+    ],
+    "ipAddressType": "ipv4"
+  },
+  "vpc-provider:account=792479060307:filter.vpc-id=vpc-0ac1b723b80c94812:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0ac1b723b80c94812",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "792479060307",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-0c0e44e8e355a3348",
+            "cidr": "10.0.96.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-048a2ca2c986dd6b7"
+          },
+          {
+            "subnetId": "subnet-0ee0d932076350295",
+            "cidr": "10.0.128.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-0b9e2c76037a5f5ea"
+          },
+          {
+            "subnetId": "subnet-078040e5d87ede071",
+            "cidr": "10.0.160.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-076f09b2d3ccac4b9"
+          }
+        ]
+      },
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-09f836d4e118bf025",
+            "cidr": "10.0.0.0/19",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0cb66c32d422ee691"
+          },
+          {
+            "subnetId": "subnet-00e84db05224633b9",
+            "cidr": "10.0.32.0/19",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-05cdbb4aaa7d0db5b"
+          },
+          {
+            "subnetId": "subnet-0ceb071cd722909f1",
+            "cidr": "10.0.64.0/19",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0f27a660f6260d289"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=792479060307:region=us-east-1:securityGroupId=sg-003c4785267a48015": {
+    "securityGroupId": "sg-003c4785267a48015",
+    "allowAllOutbound": false
+  }
 }

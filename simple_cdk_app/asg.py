@@ -1,13 +1,19 @@
 from aws_cdk import (
     aws_ec2 as ec2,
     aws_autoscaling as autoscaling,
+    aws_cloudfront as cloudfront,
+    aws_cloudfront_origins as origins,
     aws_ecs as ecs,
     aws_iam as iam,
     aws_route53 as route53,
     aws_route53_targets as targets,
     aws_elasticloadbalancingv2 as elbv2,
     CfnOutput,
-    aws_certificatemanager as acm
+    aws_certificatemanager as acm,
+    aws_s3 as s3,
+    aws_route53_targets as route53_targets,
+    RemovalPolicy,
+    aws_s3_deployment as s3_deployment,
 )
 from aws_cdk import App, Stack
 
@@ -32,9 +38,6 @@ class EcsWithAsgStack(Stack):
         )
 
         user_data = ec2.UserData.for_linux()
-        # user_data.add_commands("sudo yum update -y")
-        # user_data.add_commands("echo ECS_CLUSTER=my-ecs-cluster >> /etc/ecs/ecs.config")
-        # user_data.add_commands("echo ECS_CONTAINER_INSTANCE_PROPAGATE_TAGS_FROM=ec2_instance >> /etc/ecs/ecs.config")
 
         def define_sg_grop():
             security_group = ec2.SecurityGroup(
@@ -186,8 +189,8 @@ class EcsWithAsgStack(Stack):
 
         listener = lb.add_listener(
             "Listener",
-            port=443,
-            certificates=[certificate]
+            port=80,
+            # certificates=[certificate]
         )
         listener.add_targets(
             "FastApiTargetGroup",
@@ -216,13 +219,146 @@ class EcsWithAsgStack(Stack):
             targets=[asg]
         )
         CfnOutput(self, "LoadBalancerDNS", value=lb.load_balancer_dns_name)
+        # sftp_bucket_name = 'andriis-sftp-files'
+        # sftp_bucket = s3.Bucket(
+        #     self,
+        #     "MyBucket",
+        #     bucket_name=sftp_bucket_name,
+        #     versioned=False,
+        #     auto_delete_objects=True,
+        #     removal_policy=RemovalPolicy.DESTROY
+        # )
+        #
+        # # just to deploy test files
+        # s3_deployment.BucketDeployment(
+        #     self,
+        #     "UploadFile",
+        #     sources=[s3_deployment.Source.asset("./web")],  # Local folder or file path
+        #     destination_bucket=sftp_bucket
+        # )
+        # {
+        #     "Version": "2008-10-17",
+        #     "Id": "PolicyForCloudFrontPrivateContent",
+        #     "Statement": [
+        #         {
+        #             "Sid": "AllowCloudFrontServicePrincipal",
+        #             "Effect": "Allow",
+        #             "Principal": {
+        #                 "Service": "cloudfront.amazonaws.com"
+        #             },
+        #             "Action": "s3:GetObject",
+        #             "Resource": "arn:aws:s3:::andriis-sftp-files/*",
+        #             "Condition": {
+        #                 "StringEquals": {
+        #                     "AWS:SourceArn": "arn:aws:cloudfront::792479060307:distribution/E2RAPD4YNPLOXR"
+        #                 }
+        #             }
+        #         }
+        #     ]
+        # }
+        # sftp_bucket_policy = {
+        #     "Version": "2008-10-17",
+        #     "Id": "PolicyForCloudFrontPrivateContent",
+        #     "Statement": [
+        #         {
+        #             "Sid": "AllowCloudFrontServicePrincipal",
+        #             "Effect": "Allow",
+        #             "Principal": {
+        #                 "Service": "cloudfront.amazonaws.com"
+        #             },
+        #             "Action": "s3:GetObject",
+        #             "Resource": "arn:aws:s3:::" + sftp_bucket_name + "/*"
+        #         }
+        #     ]
+        # }
+        #
+        # s3.CfnBucketPolicy(self, "BucketPolicy",
+        #     bucket=sftp_bucket_name,
+        #     policy_document=sftp_bucket_policy
+        # )
 
 
+        bucket_name = "andriis-static-html"
+        bucket = s3.Bucket(
+            self,
+            "MyBucket",
+            bucket_name=bucket_name,
+            versioned=False,
+            auto_delete_objects=True,
+            removal_policy=RemovalPolicy.DESTROY,
+            website_index_document="index.html"
+        )
+
+        s3_deployment.BucketDeployment(
+            self,
+            "UploadFile",
+            sources=[s3_deployment.Source.asset("./web")],  # Local folder or file path
+            destination_bucket=bucket
+        )
+
+        new_policy = {
+            "Version": "2008-10-17",
+            "Id": "PolicyForCloudFrontPrivateContent",
+            "Statement": [
+                {
+                    "Sid": "AllowCloudFrontServicePrincipal",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "cloudfront.amazonaws.com"
+                    },
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::" + bucket_name + "/*"
+                }
+            ]
+        }
+        cfn_bucket = s3.CfnBucketPolicy(self, "BucketPolicy",
+            bucket=bucket_name,
+            policy_document=new_policy
+        )
+
+        oac = cloudfront.S3OriginAccessControl(self, "MyOAC",
+                                               signing=cloudfront.Signing.SIGV4_NO_OVERRIDE
+                                               )
+        s3_origin = origins.S3BucketOrigin.with_origin_access_control(bucket,
+                                                                      origin_access_control=oac
+                                                                      )
+        distribution = cloudfront.Distribution(
+            self,
+            "MyCloudFrontDistribution",
+            default_behavior=cloudfront.BehaviorOptions(
+                origin=s3_origin,
+                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+            ),
+            additional_behaviors={
+                "/api": cloudfront.BehaviorOptions(
+                    origin=origins.LoadBalancerV2Origin(lb, protocol_policy=cloudfront.OriginProtocolPolicy.HTTP_ONLY),
+                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+                    origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER,
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+                ),
+                "/sftp/*": cloudfront.BehaviorOptions(
+                    origin=origins.LoadBalancerV2Origin(lb, protocol_policy=cloudfront.OriginProtocolPolicy.HTTP_ONLY),
+                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+                    origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER,
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+                )
+            },
+            domain_names=["andriispsya.site"],
+            default_root_object="index.html",
+            certificate=certificate
+        )
 
         route53.ARecord(
             self,
             "AliasRecord",
             zone=hosted_zone,
-            target=route53.RecordTarget.from_alias(targets.LoadBalancerTarget(lb)),
+            target=route53.RecordTarget.from_alias(route53_targets.CloudFrontTarget(distribution)),
             record_name="",
+        )
+
+        CfnOutput(
+            self,
+            "CloudFrontDomainName",
+            value=distribution.distribution_domain_name,
+            description="The domain name of the CloudFront distribution",
         )

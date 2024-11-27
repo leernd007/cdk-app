@@ -12,6 +12,5 @@ dev_env = Environment(
 
 app = App()
 EcsWithAsgStack(app, "simple-cdk-app-dev", env=dev_env)
-# CloudFrontS3(app, "cloudfront-s3-dev", env=dev_env)
 
 app.synth()
