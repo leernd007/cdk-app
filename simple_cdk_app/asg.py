@@ -222,7 +222,7 @@ class EcsWithAsgStack(Stack):
         sftp_bucket_name = 'andriis-sftp-files'
         sftp_bucket = s3.Bucket(
             self,
-            "MyBucket",
+            "MySftpBucket",
             bucket_name=sftp_bucket_name,
             versioned=False,
             auto_delete_objects=True,
@@ -232,7 +232,7 @@ class EcsWithAsgStack(Stack):
         # just to deploy test files
         s3_deployment.BucketDeployment(
             self,
-            "UploadFile",
+            "UploadSftpFile",
             sources=[s3_deployment.Source.asset("./web")],  # Local folder or file path
             destination_bucket=sftp_bucket
         )
@@ -272,7 +272,7 @@ class EcsWithAsgStack(Stack):
             ]
         }
 
-        s3.CfnBucketPolicy(self, "BucketPolicy",
+        s3.CfnBucketPolicy(self, "SftpBucketPolicy",
             bucket=sftp_bucket_name,
             policy_document=sftp_bucket_policy
         )
