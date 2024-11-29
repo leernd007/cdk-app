@@ -1,4 +1,4 @@
-Step1. ```pipx run projen new awscdk-app-py```
+BASIS ```pipx run projen new awscdk-app-py```
 
 Step2. ```cdk deploy EcrStack```
 
