@@ -9,17 +9,21 @@ from aws_cdk import (
     aws_route53_targets as targets,
     aws_elasticloadbalancingv2 as elbv2,
     CfnOutput,
+    Fn,
     aws_certificatemanager as acm,
     aws_s3 as s3,
     aws_route53_targets as route53_targets,
     RemovalPolicy,
     aws_s3_deployment as s3_deployment,
 )
+import os
 from aws_cdk import App, Stack
 
-class EcsWithAsgStack(Stack):
-    def __init__(self, scope, id, **kwargs):
+class StackWithEcsAndAsg(Stack):
+    def __init__(self, scope, id, domain_name: str, **kwargs):
         super().__init__(scope, id, **kwargs)
+
+        self.domain_name = domain_name
 
         vpc = ec2.Vpc(
             self,
@@ -92,7 +96,7 @@ class EcsWithAsgStack(Stack):
 
         #
         custom_ami = ec2.MachineImage.generic_linux({
-            "us-east-1": "ami-02b21406128600b18",
+            os.getenv('CDK_DEFAULT_REGION'): "ami-02b21406128600b18",
         })
 
         launch_template = ec2.LaunchTemplate(
@@ -100,7 +104,7 @@ class EcsWithAsgStack(Stack):
             "LaunchTemplate",
             machine_image=custom_ami,
             role=instance_role,
-            key_name="ubuntu",
+            # key_name="ubuntu",
             instance_type=ec2.InstanceType("t2.xlarge"),
             security_group=security_group,
             user_data=user_data,  # Pass UserData directly
@@ -133,7 +137,7 @@ class EcsWithAsgStack(Stack):
                                                          )
         fast_api_container = fast_api_task_definition.add_container(
             "fastapi_app",
-            image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.us-east-1.amazonaws.com/fastapi_app"),
+            image=ecs.ContainerImage.from_registry(Fn.import_value("FastApiRepoUri")),
             memory_limit_mib=3072,
             cpu=1024,
             logging=ecs.LogDrivers.aws_logs(stream_prefix="MyApp")
@@ -150,7 +154,7 @@ class EcsWithAsgStack(Stack):
                                                      )
         sftp_container = sftp_task_definition.add_container(
             "sftpgo",
-            image=ecs.ContainerImage.from_registry("792479060307.dkr.ecr.us-east-1.amazonaws.com/sftpgo"),
+            image=ecs.ContainerImage.from_registry(Fn.import_value("SftpGoRepoUri")),
             memory_limit_mib=3072,
             cpu=1024,
             logging=ecs.LogDrivers.aws_logs(stream_prefix="MyApp")
@@ -177,12 +181,12 @@ class EcsWithAsgStack(Stack):
         hosted_zone = route53.HostedZone.from_lookup(
             self,
             "HostedZone",
-            domain_name="andriispsya.site"
+            domain_name=self.domain_name
         )
         certificate = acm.Certificate(
             self,
             "SiteCertificate",
-            domain_name="andriispsya.site",  # Replace with your domain
+            domain_name=self.domain_name,
             validation=acm.CertificateValidation.from_dns(hosted_zone),  # Use DNS validation
         )
 
@@ -225,8 +229,7 @@ class EcsWithAsgStack(Stack):
             "MySftpBucket",
             bucket_name=sftp_bucket_name,
             versioned=False,
-            auto_delete_objects=True,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.RETAIN
         )
 
         # just to deploy test files
@@ -236,26 +239,7 @@ class EcsWithAsgStack(Stack):
             sources=[s3_deployment.Source.asset("./web")],  # Local folder or file path
             destination_bucket=sftp_bucket
         )
-        # {
-        #     "Version": "2008-10-17",
-        #     "Id": "PolicyForCloudFrontPrivateContent",
-        #     "Statement": [
-        #         {
-        #             "Sid": "AllowCloudFrontServicePrincipal",
-        #             "Effect": "Allow",
-        #             "Principal": {
-        #                 "Service": "cloudfront.amazonaws.com"
-        #             },
-        #             "Action": "s3:GetObject",
-        #             "Resource": "arn:aws:s3:::andriis-sftp-files/*",
-        #             "Condition": {
-        #                 "StringEquals": {
-        #                     "AWS:SourceArn": "arn:aws:cloudfront::792479060307:distribution/E2RAPD4YNPLOXR"
-        #                 }
-        #             }
-        #         }
-        #     ]
-        # }
+
         sftp_bucket_policy = {
             "Version": "2008-10-17",
             "Id": "PolicyForCloudFrontPrivateContent",
@@ -283,8 +267,7 @@ class EcsWithAsgStack(Stack):
             "MyBucket",
             bucket_name=bucket_name,
             versioned=False,
-            auto_delete_objects=True,
-            removal_policy=RemovalPolicy.DESTROY,
+            removal_policy=RemovalPolicy.RETAIN,
             website_index_document="index.html"
         )
 
@@ -342,7 +325,7 @@ class EcsWithAsgStack(Stack):
                     viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
                 )
             },
-            domain_names=["andriispsya.site"],
+            domain_names=[self.domain_name],
             default_root_object="index.html",
             certificate=certificate
         )
