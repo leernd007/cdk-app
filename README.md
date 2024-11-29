@@ -5,9 +5,11 @@ Step2. ```cdk deploy EcrStack```
 Step3. Deploy docker images to just created repositories. 
 Docker deployments are located in the **docker** directory.
 
-    ```cd docker/fast_api``` - and run docker commands
+    ```cd docker/fast_api```
+- and run docker commands
 
-    ```cd docker/sftpgo``` - and run docker commands
+    ```cd docker/sftpgo```
+- and run docker commands
 
 Step4. replace **domain_name** in app.py with your own
 
