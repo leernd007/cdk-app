@@ -104,7 +104,7 @@ class StackWithEcsAndAsg(Stack):
             "LaunchTemplate",
             machine_image=custom_ami,
             role=instance_role,
-            # key_name="ubuntu",
+            key_name="ubuntu",
             instance_type=ec2.InstanceType("t2.xlarge"),
             security_group=security_group,
             user_data=user_data,  # Pass UserData directly
@@ -320,6 +320,7 @@ class StackWithEcsAndAsg(Stack):
                 ),
                 "/sftp/*": cloudfront.BehaviorOptions(
                     origin=origins.LoadBalancerV2Origin(lb, protocol_policy=cloudfront.OriginProtocolPolicy.HTTP_ONLY),
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
                     cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
                     origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER,
                     viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
