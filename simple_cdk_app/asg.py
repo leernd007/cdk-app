@@ -104,7 +104,7 @@ class StackWithEcsAndAsg(Stack):
             "LaunchTemplate",
             machine_image=custom_ami,
             role=instance_role,
-            key_name="ubuntu",
+            # key_name="ubuntu",
             instance_type=ec2.InstanceType("t2.xlarge"),
             security_group=security_group,
             user_data=user_data,  # Pass UserData directly
